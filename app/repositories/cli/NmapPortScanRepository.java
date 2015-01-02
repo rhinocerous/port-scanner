@@ -60,7 +60,7 @@ public class NmapPortScanRepository implements PortScanRepository
 
                         String cmd = String.format(CMD, hostString);
 
-                        Logger.info("execute command " + cmd);
+                        Logger.info(String.format("execute command [%s]", cmd));
 
                         Process p= Runtime.getRuntime().exec(cmd);
                         p.waitFor();
@@ -96,7 +96,7 @@ public class NmapPortScanRepository implements PortScanRepository
 
                                 Logger.info(String.format(">>>>\tfound [%s] inactive ports", inactivePorts));
                             }
-                            else if (line.equals("PORT    STATE  SERVICE"))
+                            else if (line.replace(" ", "").equals("PORTSTATESERVICE"))
                             {
                                 portLines = true;
                             }

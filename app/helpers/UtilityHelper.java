@@ -33,7 +33,7 @@ public class UtilityHelper
             return matcher.group();
         }
         else{
-            return "0.0.0.0";
+            return null;
     }
 
 }
