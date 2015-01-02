@@ -30,4 +30,12 @@ public class PortScanException extends Exception
         super(message, cause, enableSuppression, writableStackTrace);
         this.exceptionCode = exceptionCode;
     }
+
+    public PortScanExceptionCodes getExceptionCode() {
+        return exceptionCode;
+    }
+
+    public void setExceptionCode(PortScanExceptionCodes exceptionCode) {
+        this.exceptionCode = exceptionCode;
+    }
 }

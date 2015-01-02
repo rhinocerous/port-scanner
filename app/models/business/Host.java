@@ -4,6 +4,7 @@ import exceptions.PortScanException;
 import models.BaseModel;
 
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -46,5 +47,13 @@ public class Host extends BaseModel
 
     public void setHostname(String hostname) {
         this.hostname = hostname;
+    }
+
+    public void addScan(Scan scan)
+    {
+        if(null == scans)
+            scans = new ArrayList<>();
+
+        scans.add(scan);
     }
 }

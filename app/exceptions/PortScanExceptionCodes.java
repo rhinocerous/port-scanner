@@ -9,5 +9,6 @@ public enum PortScanExceptionCodes
     storageFailure,
     validationError,
     badRequest,
-    objectNotFound
+    objectNotFound,
+    unknown
 }

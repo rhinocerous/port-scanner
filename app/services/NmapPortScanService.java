@@ -22,8 +22,9 @@ public class NmapPortScanService implements PortScanService
     protected PortScanStorageRepository storageRepository;
 
     @Override
-    public F.Promise<Host> scan(String hostName) throws PortScanException {
-        return null;
+    public F.Promise<Host> scan(String hostName) throws PortScanException
+    {
+        return scanRepository.scan(hostName);
     }
 
     @Override

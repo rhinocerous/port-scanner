@@ -3,6 +3,7 @@ package models.business;
 import models.BaseModel;
 import org.joda.time.DateTime;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -14,6 +15,7 @@ public class Scan extends BaseModel
     protected Integer hostId;
     protected DateTime created;
     protected Integer inactivePortCount;
+    protected String validHost;
     protected List<Port> ports;
     protected List<Port> delta;
 
@@ -63,5 +65,21 @@ public class Scan extends BaseModel
 
     public void setDelta(List<Port> delta) {
         this.delta = delta;
+    }
+
+    public String getValidHost() {
+        return validHost;
+    }
+
+    public void setValidHost(String validHost) {
+        this.validHost = validHost;
+    }
+
+    public void addPort(Port port)
+    {
+        if(null == ports)
+            ports = new ArrayList<>();
+
+        ports.add(port);
     }
 }
