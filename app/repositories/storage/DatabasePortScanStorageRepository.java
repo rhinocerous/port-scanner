@@ -1,6 +1,5 @@
 package repositories.storage;
 
-import com.google.inject.Inject;
 import exceptions.PortScanExceptionCodes;
 import exceptions.PortScanStorageException;
 import models.business.Host;
@@ -12,6 +11,7 @@ import play.Logger;
 import play.db.DB;
 import play.libs.F;
 
+import java.net.InetAddress;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -67,8 +67,41 @@ public class DatabasePortScanStorageRepository implements PortScanStorageReposit
     }
 
     @Override
-    public F.Promise<Host> getHostById(Integer hostId) throws PortScanStorageException {
-        return null;
+    public F.Promise<Host> getHostById(final Integer hostId) throws PortScanStorageException
+    {
+        return F.Promise.promise
+        (
+            new F.Function0<Host>()
+            {
+                public Host apply() throws PortScanStorageException
+                {
+                    try
+                    {
+                        PreparedStatement query = dbConnection.prepareStatement("SELECT id, hostname, ip, created, lastScan FROM hosts WHERE id=?");
+                        query.setInt(1, hostId);
+
+                        ResultSet result = query.executeQuery();
+
+                        Host host = new Host();
+
+                        while (result.next())
+                        {
+                            host.setId(result.getInt("id"));
+                            host.setCreated(new DateTime(result.getTimestamp("created")));
+                            host.setLastScan(new DateTime(result.getTimestamp("lastScan")));
+                            host.setHostname(result.getString("hostname"));
+                            host.setIp(InetAddress.getByName(result.getString("ip")));
+                        }
+
+                        return host;
+                    }
+                    catch (Exception e)
+                    {
+                        throw new PortScanStorageException(String.format("host by id lookup failed for id #%s", hostId), e, PortScanExceptionCodes.databaseException);
+                    }
+                }
+            }
+        );
     }
 
     @Override
@@ -95,34 +128,21 @@ public class DatabasePortScanStorageRepository implements PortScanStorageReposit
             promise = _updateHost(host);
         }
 
-        return promise.map
+        return promise.flatMap
         (
-            new F.Function<Host, Host>()
+            new F.Function<Host, F.Promise<Host>>()
             {
-                public Host apply(final Host host) throws PortScanStorageException
-                {
-                    if(host.getScans().size() > 0)
-                    {
+                public F.Promise<Host> apply(final Host host) throws PortScanStorageException {
+                    if (host.getScans().size() > 0) {
                         final Scan scan = host.getScans().get(0);
 
                         scan.setHostId(host.getId());
 
-                        saveScan(scan).map
-                        (
-                            new F.Function<Scan, Host>()
-                            {
-                                @Override
-                                public Host apply(Scan scan) throws Throwable
-                                {
-                                    host.getScans().set(0, scan);
-
-                                    return host;
-                                }
-                            }
-                        );
+                    //  do this one as blocking call since we need to make sure scanId is returned
+                        saveScan(scan).get(30000);
                     }
 
-                    return host;
+                    return getHostById(host.getId());
                 }
             }
         );

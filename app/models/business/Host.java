@@ -54,6 +54,13 @@ public class Host extends BaseModel
         this.hostname = hostname;
     }
 
+    @JsonProperty("created")
+    public Long getCreatedTimestamp()
+    {
+        return (null == created) ? null : created.getMillis() / 1000;
+    }
+
+    @JsonIgnore
     public DateTime getCreated() {
         return created;
     }
@@ -63,9 +70,9 @@ public class Host extends BaseModel
     }
 
     @JsonProperty("lastScan")
-    public String getLastScanString()
+    public Long getLastScanString()
     {
-        return (null == lastScan) ? null : lastScan.toString();
+        return (null == lastScan) ? null : lastScan.getMillis() / 1000;
     }
 
     @JsonIgnore

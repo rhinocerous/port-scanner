@@ -70,6 +70,10 @@ public class NmapPortScanService implements PortScanService
 
                                         host.setId(hostId);
                                     }
+                                    else
+                                    {
+                                        Logger.info(String.format("host [%s] not found in database", hostName));
+                                    }
 
                                     return storageRepository.saveHost(host);
                                 }
