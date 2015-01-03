@@ -35,7 +35,6 @@ import java.util.List;
  587/tcp closed submission
 
  Nmap done: 1 IP address (1 host up) scanned in 8.59 seconds
-
  *
  */
 public class NmapPortScanRepository implements PortScanRepository
@@ -123,7 +122,6 @@ public class NmapPortScanRepository implements PortScanRepository
                                     scan.addPort(port);
                                 }
                             }
-//                            Logger.info(line);
                         }
 
                         host.addScan(scan);

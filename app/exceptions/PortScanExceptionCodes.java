@@ -7,6 +7,7 @@ public enum PortScanExceptionCodes
 {
     scanFailure,
     storageFailure,
+    databaseException,
     validationError,
     badRequest,
     objectNotFound,

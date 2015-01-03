@@ -1,12 +1,14 @@
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Provides;
 import exceptions.PortScanException;
 import exceptions.PortScanExceptionCodes;
 import models.output.ErrorResponse;
 import play.Application;
 import play.GlobalSettings;
 import play.Logger;
+import play.db.DB;
 import play.libs.F;
 import play.libs.Json;
 import play.mvc.Http;
@@ -19,6 +21,9 @@ import repositories.storage.PortScanStorageRepository;
 import services.NmapPortScanService;
 import services.PortScanService;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+
 import static play.mvc.Results.internalServerError;
 
 /**
@@ -28,30 +33,41 @@ public class Global extends GlobalSettings
 {
     private Injector injector;
 
+    private Connection dbConnection;
+
     @Override
     public void onStart(Application application)
     {
         Logger.info("Port scanner demo is starting up");
 
-        //  guice injection
+    //  guice injection
         injector = Guice.createInjector(new AbstractModule()
         {
             @Override
             protected void configure()
             {
-                //  services
+            //  services
                 bind(PortScanService.class).to(NmapPortScanService.class);
 
-                //  repositories
+            //  repositories
                 bind(PortScanStorageRepository.class).to(DatabasePortScanStorageRepository.class);
                 bind(PortScanRepository.class).to(NmapPortScanRepository.class);
             }
         });
+
+        dbConnection = DB.getConnection();
     }
 
     @Override
-    public void onStop(Application app) {
+    public void onStop(Application app)
+    {
         Logger.info("Port scanner demo is shutting down...");
+
+        try {
+            dbConnection.close();
+        } catch (SQLException e) {
+            Logger.error("mysql shutdown failed", e);
+        }
     }
 
     @Override
@@ -64,7 +80,6 @@ public class Global extends GlobalSettings
             if(t instanceof PortScanException)
             {
                 errorResponse = _mapToResponse(t);
-
             }
             else if(t.getCause() instanceof PortScanException)
             {
@@ -95,10 +110,18 @@ public class Global extends GlobalSettings
         }
     }
 
-    //  this allows guice binding in controllers
+//  this allows guice binding in controllers
     @Override
     public <T> T getControllerInstance(Class<T> aClass) throws Exception {
         return injector.getInstance(aClass);
+    }
+
+
+//  I wanted to provide the connection with guice but this would not work for some reason.
+    @Provides
+    public Connection provideDbConnection()
+    {
+        return dbConnection;
     }
 
     private ErrorResponse _mapToResponse(Throwable t)

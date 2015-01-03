@@ -11,5 +11,6 @@ libraryDependencies ++= Seq(
   javaEbean,
   cache,
   javaWs,
-  "com.google.inject" % "guice" % "4.0-beta5"
+  "com.google.inject" % "guice" % "4.0-beta5",
+  "mysql" % "mysql-connector-java" % "5.1.18"
 )

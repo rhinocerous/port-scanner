@@ -3,6 +3,7 @@ package services;
 import com.google.inject.Inject;
 import exceptions.PortScanException;
 import exceptions.PortScanExceptionCodes;
+import exceptions.PortScanStorageException;
 import helpers.UtilityHelper;
 import models.business.Host;
 import models.business.Scan;
@@ -26,15 +27,17 @@ public class NmapPortScanService implements PortScanService
     protected PortScanStorageRepository storageRepository;
 
     @Override
-    public F.Promise<Host> scan(String hostName) throws PortScanException
+    public F.Promise<Host> scan(final String hostName) throws PortScanException
     {
         List<String> domainCheck = UtilityHelper.extractDomains(hostName);
+
+        String validatedHost = null;
 
         if(domainCheck.size() > 0)
         {
             Logger.info(String.format("found domain name [%s]", domainCheck.get(0)));
 
-            return scanRepository.scan(domainCheck.get(0));
+            validatedHost = domainCheck.get(0);
         }
 
         String ipCheck = UtilityHelper.extractIp(hostName);
@@ -43,7 +46,38 @@ public class NmapPortScanService implements PortScanService
         {
             Logger.info(String.format("found IP address [%s]", ipCheck));
 
-            return scanRepository.scan(ipCheck);
+            validatedHost = ipCheck;
+        }
+
+        if(!StringUtils.isEmpty(validatedHost))
+        {
+            return scanRepository.scan(validatedHost).flatMap
+            (
+                new F.Function<Host, F.Promise<Host>>()
+                {
+                    public F.Promise<Host> apply(final Host host) throws PortScanStorageException
+                    {
+                        return storageRepository.getHostIdByName(hostName).flatMap
+                        (
+                            new F.Function<Integer, F.Promise<Host>>()
+                            {
+                                @Override
+                                public F.Promise<Host> apply(Integer hostId) throws Throwable
+                                {
+                                    if(hostId > 0)
+                                    {
+                                        Logger.info(String.format("found host [%s] in database as id #%s", hostName, hostId));
+
+                                        host.setId(hostId);
+                                    }
+
+                                    return storageRepository.saveHost(host);
+                                }
+                            }
+                        );
+                    }
+                }
+            );
         }
 
         throw new PortScanException(String.format("invalid host [%s] - try scanning by domain name or IP address", hostName), PortScanExceptionCodes.badRequest);
