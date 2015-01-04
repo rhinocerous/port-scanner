@@ -6,10 +6,12 @@ SCANNER =
 {
     form:null,
     error_target:null,
+    results_target:null,
     initialize:function(form)
     {
         SCANNER.form = form;
         SCANNER.error_target = $("#error-target");
+        SCANNER.results_target = $("#results-target");
 
         SCANNER.form.submit(SCANNER.submit);
 
@@ -69,32 +71,52 @@ SCANNER =
     },
     scan:function(hosts)
     {
+        SCANNER.results_target.hide().html("");
+
         jQuery.ajax({
             type: "POST",
             url: SCANNER.form.attr("action"),
             data: JSON.stringify({hosts:hosts}),
             dataType: 'json',
             beforeSend: setHeader,
-            success: function(data)
-            {
-                alert("success");
-                //jQuery( "div#auto-quote-form-div").html(data['html']);
-                //
-                //if(jQuery("form#auto-quote-form").length > 0)
-                //{
-                //    autodealio_init_form(jQuery("form#auto-quote-form"));
-                //}
-                //
-                //jQuery('html,body').animate({
-                //    scrollTop: jQuery("div#auto-quote-form-main").offset().top - 80
-                //}, 'slow');
-
-            },
-            error: function(XMLHttpRequest, textStatus, errorThrown)
-            {
-                SCANNER.error_target.html(XMLHttpRequest.responseText);
-            }
+            success: SCANNER.onScanSuccess,
+            error: SCANNER.onScanError
         });
+    },
+    onScanSuccess:function(data)
+    {
+        var html = [];
+
+        $.each(data, function( index, value )
+        {
+            var tab = "<div id=\"accordion\"><h3>" + value.hostname +"</h3><div>";
+
+            tab += "<p><strong>Hostname: </strong>" + value.hostname +"</p>";
+            tab += "<p><strong>IP address: </strong>" + value.ip +"</p>";
+            tab += "<p><strong>First Scanned: </strong>" + value.created +"</p>";
+            tab += "<p><strong>Most Recent Scan: </strong>" + value.lastScan +"</p>";
+            tab += "<p><strong>Currently Active Ports: </strong><ul>";
+            $.each(value.scans[0].ports, function( portIndex, portValue )
+            {
+                tab += "<li><strong>" + portValue.port + ":</strong> " + portValue.service + " (" + portValue.state + ")</li>";
+            });
+            tab += "</ul></p>";
+            tab += "</div></div>";
+
+            html.push(tab);
+        });
+
+        SCANNER.results_target.html(html.join("\n"));
+
+        $("#accordion").accordion({
+            heightStyle: "content"
+        });
+
+        SCANNER.results_target.show("fast");
+    },
+    onScanError: function(XMLHttpRequest, textStatus, errorThrown)
+    {
+        SCANNER.error_target.html(XMLHttpRequest.responseText);
     },
     validate:function(host)
     {

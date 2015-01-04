@@ -13,6 +13,7 @@ import play.libs.F;
 import repositories.cli.PortScanRepository;
 import repositories.storage.PortScanStorageRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -88,8 +89,16 @@ public class NmapPortScanService implements PortScanService
     }
 
     @Override
-    public F.Promise<List<Host>> scan(List<String> hostNames) throws PortScanException {
-        return null;
+    public F.Promise<List<Host>> scan(List<String> hostNames) throws PortScanException
+    {
+        List<F.Promise<Host>> promiseList = new ArrayList<>(hostNames.size());
+
+        for(String host: hostNames)
+        {
+            promiseList.add(scan(host));
+        }
+
+        return F.Promise.sequence(promiseList);
     }
 
     @Override

@@ -211,6 +211,7 @@ public class DatabasePortScanStorageRepository implements PortScanStorageReposit
                             port.setProtocol(result.getString("protocol"));
                             port.setState(result.getString("state"));
                             port.setService(result.getString("service"));
+                            port.setPort(result.getInt("port"));
                             portList.add(port);
                         }
 
