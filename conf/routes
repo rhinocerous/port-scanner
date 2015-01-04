@@ -1,8 +1,8 @@
 # Routes
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
-POST        /scan               @controllers.PortScan.scan()
-GET         /:identifier        @controllers.PortScan.history(identifier:String, count:Integer ?= 10, page:Integer ?= 1)
+POST        /scan                   @controllers.PortScan.scan()
+GET         /host/*identifier       @controllers.PortScan.history(identifier:String, count:Integer ?= 10, page:Integer ?= 1)
 
 
 # Home page

@@ -10,6 +10,7 @@ import exceptions.PortScanException;
 import exceptions.PortScanExceptionCodes;
 import helpers.JsonHelper;
 import models.business.Host;
+import models.business.Scan;
 import org.apache.commons.lang3.StringUtils;
 import play.libs.F;
 import play.libs.Json;
@@ -88,8 +89,17 @@ public class PortScan extends ApiController
             throw new PortScanException("Request body must be in JSON format and include host:(string) or hosts:[(strings)...]", PortScanExceptionCodes.validationError);
     }
 
-    public F.Promise<Result> history(String identifier, Integer count, Integer page) throws PortScanException
+    public F.Promise<Result> history(String hostName, Integer count, Integer page) throws PortScanException
     {
-        return null;
+        return portScanService.getHistoryByHostname(hostName, page, count).map
+        (
+            new F.Function<List<Scan>, Result>()
+            {
+                public Result apply(List<Scan> scans)
+                {
+                    return ok(Json.toJson(scans));
+                }
+            }
+        );
     }
 }

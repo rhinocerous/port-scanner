@@ -227,8 +227,22 @@ public class DatabasePortScanStorageRepository implements PortScanStorageReposit
     }
 
     @Override
-    public F.Promise<List<Scan>> getHistoryByHostname(String hostname, Integer page, Integer count) throws PortScanStorageException {
-        return null;
+    public F.Promise<List<Scan>> getHistoryByHostname(final String hostname, final Integer page, final Integer count) throws PortScanStorageException
+    {
+        return getHostIdByName(hostname).flatMap
+        (
+            new F.Function<Integer, F.Promise<List<Scan>>>()
+            {
+                @Override
+                public F.Promise<List<Scan>> apply(Integer hostId) throws Throwable
+                {
+                    if(hostId == 0)
+                        throw new PortScanStorageException("no records found for host " + hostname, PortScanExceptionCodes.objectNotFound);
+
+                    return getHistoryById(hostId, page, count);
+                }
+            }
+        );
     }
 
     @Override

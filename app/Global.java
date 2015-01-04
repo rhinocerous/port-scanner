@@ -33,8 +33,6 @@ public class Global extends GlobalSettings
 {
     private Injector injector;
 
-    private Connection dbConnection;
-
     @Override
     public void onStart(Application application)
     {
@@ -54,8 +52,6 @@ public class Global extends GlobalSettings
                 bind(PortScanRepository.class).to(NmapPortScanRepository.class);
             }
         });
-
-        dbConnection = DB.getConnection();
     }
 
     @Override
@@ -63,11 +59,8 @@ public class Global extends GlobalSettings
     {
         Logger.info("Port scanner demo is shutting down...");
 
-        try {
-            dbConnection.close();
-        } catch (SQLException e) {
-            Logger.error("mysql shutdown failed", e);
-        }
+        PortScanStorageRepository storageRepository = injector.getInstance(PortScanStorageRepository.class);
+        storageRepository.shutdown();
     }
 
     @Override
@@ -116,14 +109,6 @@ public class Global extends GlobalSettings
         return injector.getInstance(aClass);
     }
 
-
-//  I wanted to provide the connection with guice but this would not work for some reason.
-    @Provides
-    public Connection provideDbConnection()
-    {
-        return dbConnection;
-    }
-
     private ErrorResponse _mapToResponse(Throwable t)
     {
         PortScanException exception = (PortScanException) t;
@@ -136,6 +121,6 @@ public class Global extends GlobalSettings
 
     private boolean _isJson(Http.RequestHeader request)
     {
-        return request.getHeader("Content-Type").contains("json") || request.getHeader("content-type").contains("json");
+        return (request.getHeader("Content-Type")!= null && request.getHeader("Content-Type").contains("json")) || (request.getHeader("content-type")!= null && request.getHeader("content-type").contains("json"));
     }
 }

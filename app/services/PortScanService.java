@@ -16,7 +16,5 @@ public interface PortScanService
 
     public F.Promise<List<Host>> scan(List<String> hostNames) throws PortScanException;
 
-    public F.Promise<List<Scan>> getHistoryByHostname(String hostname) throws PortScanException;
-
-    public F.Promise<List<Scan>> getHistoryById(Integer hostId) throws PortScanException;
+    public F.Promise<List<Scan>> getHistoryByHostname(String hostname, Integer page, Integer count) throws PortScanException;
 }

@@ -102,12 +102,8 @@ public class NmapPortScanService implements PortScanService
     }
 
     @Override
-    public F.Promise<List<Scan>> getHistoryByHostname(String hostname) throws PortScanException {
-        return null;
-    }
-
-    @Override
-    public F.Promise<List<Scan>> getHistoryById(Integer hostId) throws PortScanException {
-        return null;
+    public F.Promise<List<Scan>> getHistoryByHostname(String hostname, Integer page, Integer count) throws PortScanException
+    {
+        return storageRepository.getHistoryByHostname(hostname, page, count);
     }
 }
