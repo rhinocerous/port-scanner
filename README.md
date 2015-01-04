@@ -2,6 +2,12 @@
 
 This is a demonstration project which scans ports using NMAP and saves history in mysql database. The project is written in Java 7 utilizing Play Framework v2.3.7 with jQuery front end, and was developed on Windows. 
 
+## Development notes
+ * On my Windows 8 laptop I noticed a problem with NMAP when you try to scan more than two or three hosts at once. I am running the requests in parallel so I am not sure if this is a bug caused by the java promises or by NMAP itself not being able to run concurrently.
+ * Dependency injection in this project is managed with Guice, in case you wondered what all those "@inject" annotations are for.
+ * The UI is not great, I used simple jQuery UI accordions and loaded everything via ajax. if this was a production project I would have liked to add pagination links for the scan history and a better way to navigate those items. I spent much more time building the API than the front end.
+ * I didn't get enough time to make proper unit tests or add enough documentation to my interfaces. I realize these things are important.
+
 ## Installation
 The following installation procedure assumes that you already have MySQL installed and running on localhost:3306. 
 
