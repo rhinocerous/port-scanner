@@ -104,6 +104,25 @@ SCANNER =
                 tab += "<li><strong>" + portValue.port + ":</strong> " + portValue.service + " (" + portValue.state + ")</li>";
             });
             tab += "</ul></p>";
+
+            if(null == value.portsAdded || value.portsAdded.length < 1)
+            {
+                tab += "<p>No ports were added since the last scan.</p>";
+            }
+            else
+            {
+                tab += "<p><strong>Ports added since last scan: </strong>" + value.portsAdded.join(", ") +"</p>";
+            }
+
+            if(null == value.portsRemoved || value.portsRemoved.length < 1)
+            {
+                tab += "<p>No ports were removed since the last scan.</p>";
+            }
+            else
+            {
+                tab += "<p><strong>Ports removed since last scan: </strong>" + value.portsRemoved.join(", ") +"</p>";
+            }
+
             tab += "<p><a href=\"/host/" + value.hostname +"\" ref=\"" + value.hostname +"\" class=\"history-link\">View history</a></p>";
             tab += "<p><a href=\"/host/" + value.hostname +"\" ref=\"" + value.hostname +"\" target=\"_blank\">View history as JSON</a></p>";
             tab += "</div>";

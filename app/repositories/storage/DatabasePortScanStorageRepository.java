@@ -158,6 +158,30 @@ public class DatabasePortScanStorageRepository implements PortScanStorageReposit
                             }
                         }
 
+                        if(scanList.size() >= 2)
+                        {
+                            List<Integer> first = new ArrayList<Integer>();
+                            List<Integer> second = new ArrayList<Integer>();
+
+                            for(Port port : scanList.get(0).getPorts())
+                            {
+                                first.add(port.getPort());
+                            }
+
+                            for(Port port : scanList.get(1).getPorts())
+                            {
+                                second.add(port.getPort());
+                            }
+
+                            ArrayList<Integer> add = new ArrayList<>(second);
+                            add.removeAll(first);
+                            scanList.get(0).setPortsAdded(add);
+
+                            ArrayList<Integer> remove = new ArrayList<>(second);
+                            remove.removeAll(first);
+                            scanList.get(0).setPortsRemoved(add);
+                        }
+
                         return scanList;
                     }
                 }

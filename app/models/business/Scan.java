@@ -19,7 +19,8 @@ public class Scan extends BaseModel
     protected Integer inactivePortCount;
     protected String validHost;
     protected List<Port> ports;
-    protected List<Port> delta;
+    protected List<Integer> portsRemoved;
+    protected List<Integer> portsAdded;
 
     public Integer getId() {
         return id;
@@ -68,12 +69,20 @@ public class Scan extends BaseModel
         this.ports = ports;
     }
 
-    public List<Port> getDelta() {
-        return delta;
+    public List<Integer> getPortsRemoved() {
+        return portsRemoved;
     }
 
-    public void setDelta(List<Port> delta) {
-        this.delta = delta;
+    public void setPortsRemoved(List<Integer> portsRemoved) {
+        this.portsRemoved = portsRemoved;
+    }
+
+    public List<Integer> getPortsAdded() {
+        return portsAdded;
+    }
+
+    public void setPortsAdded(List<Integer> portsAdded) {
+        this.portsAdded = portsAdded;
     }
 
     public String getValidHost() {
