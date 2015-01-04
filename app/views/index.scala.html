@@ -1,7 +1,21 @@
 @(message: String)
 
-@main("Welcome to Play") {
+@layout(message) {
 
-    @play20.welcome(message, style = "Java")
+    <ol>
+        <li>Enter one or more hostnames or IP addresses in the box</li>
+        <li>If entering more than one host, separate with commas</li>
+        <li>Click the button</li>
+    </ol>
 
+    <form action="/scan" method="post" id="port-scan-form">
+        <p>
+            <textarea name="hosts" id="hosts" rows="5" cols="75"></textarea>
+        </p>
+        <p>
+            <button type="submit">Scan Ports</button>
+        </p>
+    </form><br/>
+    <div id="error-target"></div>
+    <div class="overlay-modal"></div>
 }

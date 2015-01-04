@@ -1,0 +1,39 @@
+@(title: String)(content: Html)
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+            <!--[if lt IE 9]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+        <title>@title</title>
+        <meta name="keywords" content="" />
+        <meta name="description" content="" />
+
+        <link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/main.css")">
+        <link rel="shortcut icon" type="image/png" href="@routes.Assets.at("images/favicon.png")">
+
+    </head>
+
+    <body>
+
+        <div class="wrapper">
+
+            <header class="header">
+                <h1>@title</h1>
+                <h3>Demonstration project by Aaron Gibson</h3>
+            </header><!-- .header-->
+
+            <main class="content">
+            @content
+            </main><!-- .content -->
+
+            <footer class="footer">
+                <p><strong>Copyright &copy;</strong> 2015 Aaron Gibson</p>
+            </footer><!-- .footer -->
+
+        </div><!-- .wrapper -->
+
+        <script src="https://code.jquery.com/jquery-1.11.2.min.js" type="text/javascript"></script>
+        <script src="@routes.Assets.at("javascripts/port_scanner.js")" type="text/javascript"></script>
+    </body>
+</html>
