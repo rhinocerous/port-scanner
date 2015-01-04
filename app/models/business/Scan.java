@@ -1,5 +1,7 @@
 package models.business;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import models.BaseModel;
 import org.joda.time.DateTime;
 
@@ -35,6 +37,13 @@ public class Scan extends BaseModel
         this.hostId = hostId;
     }
 
+    @JsonProperty("created")
+    public Long getCreatedTimestamp()
+    {
+        return (null == created) ? null : created.getMillis() / 1000;
+    }
+
+    @JsonIgnore
     public DateTime getCreated() {
         return created;
     }

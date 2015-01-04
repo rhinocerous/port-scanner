@@ -69,35 +69,84 @@ public class DatabasePortScanStorageRepository implements PortScanStorageReposit
     @Override
     public F.Promise<Host> getHostById(final Integer hostId) throws PortScanStorageException
     {
-        return F.Promise.promise
-        (
-            new F.Function0<Host>()
+        try
+        {
+            PreparedStatement query = dbConnection.prepareStatement("SELECT id, hostname, ip, created, lastScan FROM hosts WHERE id=?");
+            query.setInt(1, hostId);
+
+            ResultSet result = query.executeQuery();
+
+            final Host host = new Host();
+
+        //  there is only one record
+            while (result.next())
             {
-                public Host apply() throws PortScanStorageException
+                host.setId(result.getInt("id"));
+                host.setCreated(new DateTime(result.getTimestamp("created")));
+                host.setLastScan(new DateTime(result.getTimestamp("lastScan")));
+                host.setHostname(result.getString("hostname"));
+                host.setIp(InetAddress.getByName(result.getString("ip")));
+            }
+
+            return getHistoryById(hostId, 1, 5).map
+            (
+                new F.Function<List<Scan>, Host>()
                 {
-                    try
+                    @Override
+                    public Host apply(List<Scan> scans) throws Throwable
                     {
-                        PreparedStatement query = dbConnection.prepareStatement("SELECT id, hostname, ip, created, lastScan FROM hosts WHERE id=?");
-                        query.setInt(1, hostId);
-
-                        ResultSet result = query.executeQuery();
-
-                        Host host = new Host();
-
-                        while (result.next())
-                        {
-                            host.setId(result.getInt("id"));
-                            host.setCreated(new DateTime(result.getTimestamp("created")));
-                            host.setLastScan(new DateTime(result.getTimestamp("lastScan")));
-                            host.setHostname(result.getString("hostname"));
-                            host.setIp(InetAddress.getByName(result.getString("ip")));
-                        }
+                        host.setScans(scans);
 
                         return host;
                     }
+                }
+            );
+        }
+        catch (Exception e)
+        {
+            throw new PortScanStorageException(String.format("host by id lookup failed for id #%s", hostId), e, PortScanExceptionCodes.databaseException);
+        }
+    }
+
+    @Override
+    public F.Promise<List<Scan>> getHistoryById(final Integer hostId, final Integer page, final Integer count) throws PortScanStorageException
+    {
+        return F.Promise.promise
+        (
+            new F.Function0<List<Scan>>()
+            {
+                public List<Scan> apply() throws PortScanStorageException
+                {
+                    try
+                    {
+                        PreparedStatement query = dbConnection.prepareStatement("SELECT id, hostId, created, inactivePorts, validHost FROM scans WHERE hostId=? ORDER BY created DESC LIMIT ? OFFSET ?");
+                        query.setInt(1, hostId);
+                        query.setInt(2, count);
+                        query.setInt(3, (page - 1) * count);
+
+                        ResultSet result = query.executeQuery();
+
+                        List<Scan> scanList = new ArrayList<>();
+                        List<Integer> scanIdList = new ArrayList<>();
+
+                        while (result.next())
+                        {
+                            Scan scan = new Scan();
+                            scan.setId(result.getInt("id"));
+                            scan.setCreated(new DateTime(result.getTimestamp("created")));
+                            scan.setHostId(result.getInt("hostId"));
+                            scan.setValidHost(result.getString("validHost"));
+                            scan.setInactivePortCount(result.getInt("inactivePorts"));
+                            scanList.add(scan);
+
+                            scanIdList.add(scan.getId());
+                        }
+
+                        return scanList;
+                    }
                     catch (Exception e)
                     {
-                        throw new PortScanStorageException(String.format("host by id lookup failed for id #%s", hostId), e, PortScanExceptionCodes.databaseException);
+                        throw new PortScanStorageException(String.format("scans by host id lookup failed for host #%s", hostId), e, PortScanExceptionCodes.databaseException);
                     }
                 }
             }
@@ -105,12 +154,7 @@ public class DatabasePortScanStorageRepository implements PortScanStorageReposit
     }
 
     @Override
-    public F.Promise<List<Scan>> getHistoryById(Integer hostId) throws PortScanStorageException {
-        return null;
-    }
-
-    @Override
-    public F.Promise<List<Scan>> getHistoryByHostname(String hostname) throws PortScanStorageException {
+    public F.Promise<List<Scan>> getHistoryByHostname(String hostname, Integer page, Integer count) throws PortScanStorageException {
         return null;
     }
 

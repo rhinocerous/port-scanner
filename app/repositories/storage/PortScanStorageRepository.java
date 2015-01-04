@@ -19,9 +19,9 @@ public interface PortScanStorageRepository
 
     public F.Promise<Host> getHostById(Integer hostId) throws PortScanStorageException;
 
-    public F.Promise<List<Scan>> getHistoryById(Integer hostId) throws PortScanStorageException;
+    public F.Promise<List<Scan>> getHistoryById(Integer hostId, Integer page, Integer count) throws PortScanStorageException;
 
-    public F.Promise<List<Scan>> getHistoryByHostname(String hostname) throws PortScanStorageException;
+    public F.Promise<List<Scan>> getHistoryByHostname(String hostname, Integer page, Integer count) throws PortScanStorageException;
 
     public F.Promise<Host> saveHost(Host host) throws PortScanStorageException;
 
