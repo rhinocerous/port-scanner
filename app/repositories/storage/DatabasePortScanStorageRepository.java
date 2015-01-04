@@ -5,6 +5,7 @@ import exceptions.PortScanStorageException;
 import models.business.Host;
 import models.business.Port;
 import models.business.Scan;
+import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import play.Logger;
@@ -88,7 +89,8 @@ public class DatabasePortScanStorageRepository implements PortScanStorageReposit
                 host.setIp(InetAddress.getByName(result.getString("ip")));
             }
 
-            return getHistoryById(hostId, 1, 5).map
+        //  decorate host with scan history
+            return getHistoryById(hostId, 1, 2).map
             (
                 new F.Function<List<Scan>, Host>()
                 {
@@ -111,42 +113,112 @@ public class DatabasePortScanStorageRepository implements PortScanStorageReposit
     @Override
     public F.Promise<List<Scan>> getHistoryById(final Integer hostId, final Integer page, final Integer count) throws PortScanStorageException
     {
-        return F.Promise.promise
-        (
-            new F.Function0<List<Scan>>()
+
+        try
+        {
+            PreparedStatement query = dbConnection.prepareStatement("SELECT id, hostId, created, inactivePorts, validHost FROM scans WHERE hostId=? ORDER BY created DESC LIMIT ? OFFSET ?");
+            query.setInt(1, hostId);
+            query.setInt(2, count);
+            query.setInt(3, (page - 1) * count);
+
+            ResultSet result = query.executeQuery();
+
+            final List<Scan> scanList = new ArrayList<>();
+            List<Integer> scanIdList = new ArrayList<>();
+
+            while (result.next())
             {
-                public List<Scan> apply() throws PortScanStorageException
+                Scan scan = new Scan();
+                scan.setId(result.getInt("id"));
+                scan.setCreated(new DateTime(result.getTimestamp("created")));
+                scan.setHostId(result.getInt("hostId"));
+                scan.setValidHost(result.getString("validHost"));
+                scan.setInactivePortCount(result.getInt("inactivePorts"));
+                scanList.add(scan);
+
+                scanIdList.add(scan.getId());
+            }
+
+        //  decorate scans with ports
+            return getPortsByScanIds(scanIdList).map
+            (
+                new F.Function<List<Port>, List<Scan>>()
                 {
-                    try
+                    @Override
+                    public List<Scan> apply(List<Port> ports) throws Throwable
                     {
-                        PreparedStatement query = dbConnection.prepareStatement("SELECT id, hostId, created, inactivePorts, validHost FROM scans WHERE hostId=? ORDER BY created DESC LIMIT ? OFFSET ?");
-                        query.setInt(1, hostId);
-                        query.setInt(2, count);
-                        query.setInt(3, (page - 1) * count);
-
-                        ResultSet result = query.executeQuery();
-
-                        List<Scan> scanList = new ArrayList<>();
-                        List<Integer> scanIdList = new ArrayList<>();
-
-                        while (result.next())
+                        for(Scan scan : scanList)
                         {
-                            Scan scan = new Scan();
-                            scan.setId(result.getInt("id"));
-                            scan.setCreated(new DateTime(result.getTimestamp("created")));
-                            scan.setHostId(result.getInt("hostId"));
-                            scan.setValidHost(result.getString("validHost"));
-                            scan.setInactivePortCount(result.getInt("inactivePorts"));
-                            scanList.add(scan);
-
-                            scanIdList.add(scan.getId());
+                            for(Port port : ports)
+                            {
+                                if(port.getScanId() == scan.getId())
+                                {
+                                    scan.addPort(port);
+                                }
+                            }
                         }
 
                         return scanList;
                     }
+                }
+            );
+        }
+        catch (Exception e)
+        {
+            throw new PortScanStorageException(String.format("scans by host id lookup failed for host #%s", hostId), e, PortScanExceptionCodes.databaseException);
+        }
+    }
+
+    @Override
+    public F.Promise<List<Port>> getPortsByScanIds(final List<Integer> scanIds) throws PortScanStorageException
+    {
+        return F.Promise.promise
+        (
+            new F.Function0<List<Port>>()
+            {
+                public List<Port> apply() throws PortScanStorageException
+                {
+                    try
+                    {
+                    //  this is a dirty hack used to generate an IN clause because it turns out jdbc doesn't support passing in array type
+                    //  as a param so you can't really do IN queries effectively: http://www.javaranch.com/journal/200510/Journal200510.jsp#a2
+                    //  this is lame. if I had more time I would like to use a different db connection library that lets us select more efficiently.
+                        List<String> binders = new ArrayList<>(scanIds.size());
+
+                        for (Integer scanId : scanIds)
+                            binders.add("?");
+
+                        PreparedStatement query = dbConnection.prepareStatement(String.format("SELECT id, port, scanId, protocol, state, service FROM ports WHERE scanId IN (%s)", StringUtils.join(binders, ",")));
+
+                        int position = 1;
+
+                        for (Integer scanId : scanIds)
+                        {
+                            query.setInt(position, scanId);
+
+                            position++;
+                        }
+
+                        ResultSet result = query.executeQuery();
+
+                        List<Port> portList = new ArrayList<>();
+
+                        while (result.next())
+                        {
+                            Port port = new Port();
+                            port.setId(result.getInt("id"));
+                            port.setScanId(result.getInt("scanId"));
+                            port.setProtocol(result.getString("protocol"));
+                            port.setState(result.getString("state"));
+                            port.setService(result.getString("service"));
+                            portList.add(port);
+                        }
+
+                        return portList;
+                    }
                     catch (Exception e)
                     {
-                        throw new PortScanStorageException(String.format("scans by host id lookup failed for host #%s", hostId), e, PortScanExceptionCodes.databaseException);
+                        throw new PortScanStorageException("ports by scan ids query failed", e, PortScanExceptionCodes.databaseException);
                     }
                 }
             }
